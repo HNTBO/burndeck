@@ -1,4 +1,6 @@
-import { accounts } from './data/accounts'
+import { useMemo, useState } from 'react'
+import AccountEditor from './components/AccountEditor'
+import { accounts as seedAccounts } from './data/accounts'
 import type { HealthStatus, TrackedAccount } from './types/account'
 
 const providerLabels: Record<TrackedAccount['provider'], string> = {
@@ -36,9 +38,28 @@ const formatDate = (value?: string) => {
 }
 
 function App() {
-  const trackedProviders = new Set(accounts.map((account) => account.provider)).size
-  const manualAccounts = accounts.filter((account) => account.sourceType === 'manual').length
-  const accountsWithCap = accounts.filter((account) => account.spendCapUsd != null).length
+  const [accounts, setAccounts] = useState<TrackedAccount[]>(seedAccounts)
+
+  const trackedProviders = useMemo(
+    () => new Set(accounts.map((account) => account.provider)).size,
+    [accounts],
+  )
+  const manualAccounts = useMemo(
+    () => accounts.filter((account) => account.sourceType === 'manual').length,
+    [accounts],
+  )
+  const accountsWithCap = useMemo(
+    () => accounts.filter((account) => account.spendCapUsd != null).length,
+    [accounts],
+  )
+
+  const handleUpdateAccount = (updatedAccount: TrackedAccount) => {
+    setAccounts((currentAccounts) =>
+      currentAccounts.map((account) =>
+        account.id === updatedAccount.id ? updatedAccount : account,
+      ),
+    )
+  }
 
   return (
     <main className="shell">
@@ -74,6 +95,8 @@ function App() {
           <p>Only some accounts expose clean numeric limits.</p>
         </article>
       </section>
+
+      <AccountEditor accounts={accounts} onUpdateAccount={handleUpdateAccount} />
 
       <section className="section-header">
         <div>
