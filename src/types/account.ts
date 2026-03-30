@@ -1,0 +1,19 @@
+export type ProviderId = 'openai' | 'anthropic' | 'google' | 'other'
+export type AccessKind = 'api' | 'oauth' | 'subscription'
+export type SourceType = 'manual' | 'api' | 'derived'
+export type HealthStatus = 'healthy' | 'watch' | 'warning' | 'exhausted' | 'unknown' | 'idle'
+
+export type TrackedAccount = {
+  id: string
+  provider: ProviderId
+  label: string
+  accessKind: AccessKind
+  sourceType: SourceType
+  status: HealthStatus
+  planName?: string
+  notes?: string
+  spendUsd?: number
+  spendCapUsd?: number
+  resetAt?: string
+  updatedAt?: string
+}
