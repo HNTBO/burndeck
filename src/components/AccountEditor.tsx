@@ -1,76 +1,187 @@
-import { useMemo, useState } from 'react'
-import type { HealthStatus, TrackedAccount } from '../types/account'
+import { useEffect, useRef, useState } from 'react'
+import type { HealthStatus, ProviderId, TrackedAccount } from '../types/account'
+
+export type AccountDraft = {
+  label: string
+  provider: ProviderId
+  notes: string
+  status: HealthStatus
+}
 
 type AccountEditorProps = {
-  accounts: TrackedAccount[]
+  account?: TrackedAccount
+  createLabel: string
+  isOpen: boolean
+  mode: 'create' | 'edit'
+  onClose: () => void
+  onCreateAccount: (draft: AccountDraft) => void
+  onDeleteAccount: (accountId: string) => void
   onUpdateAccount: (account: TrackedAccount) => void
 }
 
 const statusOptions: HealthStatus[] = ['healthy', 'watch', 'warning', 'exhausted', 'unknown', 'idle']
+const providerOptions: ProviderId[] = ['openai', 'anthropic', 'google', 'other']
 
-function AccountEditor({ accounts, onUpdateAccount }: AccountEditorProps) {
-  const [selectedId, setSelectedId] = useState(accounts[0]?.id ?? '')
+const buildDraft = (account: TrackedAccount | undefined, createLabel: string): AccountDraft => ({
+  label: account?.label ?? createLabel,
+  provider: account?.provider ?? 'openai',
+  notes: account?.notes ?? '',
+  status: account?.status ?? 'unknown',
+})
 
-  const selectedAccount = useMemo(
-    () => accounts.find((account) => account.id === selectedId) ?? accounts[0],
-    [accounts, selectedId],
-  )
+function AccountEditor({
+  account,
+  createLabel,
+  isOpen,
+  mode,
+  onClose,
+  onCreateAccount,
+  onDeleteAccount,
+  onUpdateAccount,
+}: AccountEditorProps) {
+  const [draft, setDraft] = useState<AccountDraft>(() => buildDraft(account, createLabel))
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
-  if (!selectedAccount) {
+  useEffect(() => {
+    if (!isOpen) return
+    setDraft(buildDraft(account, createLabel))
+  }, [account, createLabel, isOpen, mode])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const focusTimer = window.setTimeout(() => {
+      nameInputRef.current?.focus()
+      nameInputRef.current?.select()
+    }, 10)
+
+    return () => window.clearTimeout(focusTimer)
+  }, [isOpen, mode])
+
+  useEffect(() => {
+    if (isOpen && mode === 'edit' && !account) {
+      onClose()
+    }
+  }, [account, isOpen, mode, onClose])
+
+  if (!isOpen) {
     return null
   }
 
-  const updateField = <K extends keyof TrackedAccount>(field: K, value: TrackedAccount[K]) => {
-    onUpdateAccount({
-      ...selectedAccount,
-      [field]: value,
-      updatedAt: new Date().toISOString(),
+  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const label = draft.label.trim() || createLabel
+    const notes = draft.notes.trim()
+
+    if (mode === 'edit' && account) {
+      onUpdateAccount({
+        ...account,
+        label,
+        provider: draft.provider,
+        notes: notes || undefined,
+        status: draft.status,
+        updatedAt: new Date().toISOString(),
+      })
+      onClose()
+      return
+    }
+
+    onCreateAccount({
+      ...draft,
+      label,
+      notes,
     })
+    onClose()
+  }
+
+  const handleDelete = () => {
+    if (!account) return
+    onDeleteAccount(account.id)
+    onClose()
   }
 
   return (
-    <section className="editor">
-      <div className="section-header section-header--editor">
-        <div>
-          <p className="eyebrow">Manual editor</p>
-          <h2>Update one tracked account</h2>
+    <div
+      aria-modal="true"
+      className="modal"
+      role="dialog"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose()
+        }
+      }}
+    >
+      <form className="modal__panel" onSubmit={handleSave}>
+        <div className="modal__header">
+          <div>
+            <p className="modal__eyebrow">{mode === 'create' ? 'New account' : 'Edit account'}</p>
+            <h2>{mode === 'create' ? 'Add account' : 'Update account'}</h2>
+          </div>
+          <button
+            aria-label="Close account editor"
+            className="button button--ghost button--icon"
+            type="button"
+            onClick={onClose}
+          >
+            Close
+          </button>
         </div>
-      </div>
 
-      <div className="editor__panel">
-        <label className="field">
-          <span>Account</span>
-          <select value={selectedAccount.id} onChange={(event) => setSelectedId(event.target.value)}>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div className="editor__grid">
+        <div className="modal__grid">
           <label className="field">
-            <span>Label</span>
+            <span>Name</span>
             <input
-              value={selectedAccount.label}
-              onChange={(event) => updateField('label', event.target.value)}
+              ref={nameInputRef}
+              value={draft.label}
+              onChange={(event) =>
+                setDraft((currentDraft) => ({ ...currentDraft, label: event.target.value }))
+              }
             />
           </label>
 
           <label className="field">
-            <span>Plan</span>
-            <input
-              value={selectedAccount.planName ?? ''}
-              onChange={(event) => updateField('planName', event.target.value || undefined)}
-            />
-          </label>
-
-          <label className="field">
-            <span>Status</span>
+            <span>Provider</span>
             <select
-              value={selectedAccount.status}
-              onChange={(event) => updateField('status', event.target.value as HealthStatus)}
+              value={draft.provider}
+              onChange={(event) =>
+                setDraft((currentDraft) => ({
+                  ...currentDraft,
+                  provider: event.target.value as ProviderId,
+                }))
+              }
+            >
+              {providerOptions.map((provider) => (
+                <option key={provider} value={provider}>
+                  {provider}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Health indicator</span>
+            <select
+              value={draft.status}
+              onChange={(event) =>
+                setDraft((currentDraft) => ({
+                  ...currentDraft,
+                  status: event.target.value as HealthStatus,
+                }))
+              }
             >
               {statusOptions.map((status) => (
                 <option key={status} value={status}>
@@ -79,62 +190,36 @@ function AccountEditor({ accounts, onUpdateAccount }: AccountEditorProps) {
               ))}
             </select>
           </label>
-
-          <label className="field">
-            <span>Spend USD</span>
-            <input
-              type="number"
-              step="0.01"
-              value={selectedAccount.spendUsd ?? ''}
-              onChange={(event) =>
-                updateField(
-                  'spendUsd',
-                  event.target.value === '' ? undefined : Number(event.target.value),
-                )
-              }
-            />
-          </label>
-
-          <label className="field">
-            <span>Spend cap USD</span>
-            <input
-              type="number"
-              step="0.01"
-              value={selectedAccount.spendCapUsd ?? ''}
-              onChange={(event) =>
-                updateField(
-                  'spendCapUsd',
-                  event.target.value === '' ? undefined : Number(event.target.value),
-                )
-              }
-            />
-          </label>
-
-          <label className="field">
-            <span>Reset date</span>
-            <input
-              type="date"
-              value={selectedAccount.resetAt?.slice(0, 10) ?? ''}
-              onChange={(event) =>
-                updateField(
-                  'resetAt',
-                  event.target.value ? `${event.target.value}T00:00:00Z` : undefined,
-                )
-              }
-            />
-          </label>
         </div>
 
         <label className="field field--full">
-          <span>Notes</span>
+          <span>Tracking info</span>
           <textarea
-            rows={4}
-            value={selectedAccount.notes ?? ''}
-            onChange={(event) => updateField('notes', event.target.value || undefined)}
+            rows={5}
+            value={draft.notes}
+            onChange={(event) =>
+              setDraft((currentDraft) => ({ ...currentDraft, notes: event.target.value }))
+            }
           />
         </label>
-      </div>
-    </section>
+
+        <div className="modal__actions">
+          {mode === 'edit' && account ? (
+            <button className="button button--ghost button--danger" type="button" onClick={handleDelete}>
+              Delete
+            </button>
+          ) : (
+            <span className="modal__spacer" />
+          )}
+          <button className="button button--ghost" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="button" type="submit">
+            {mode === 'create' ? 'Add account' : 'Save changes'}
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 

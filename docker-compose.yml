@@ -1,0 +1,9 @@
+services:
+  burndeck:
+    build: .
+    container_name: burndeck
+    env_file:
+      - .env
+    ports:
+      - "6409:6409"
+    restart: unless-stopped

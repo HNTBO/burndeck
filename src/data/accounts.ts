@@ -1,6 +1,7 @@
+import { getDefaultAdapter } from '../lib/accountSync'
 import type { TrackedAccount } from '../types/account'
 
-export const accounts: TrackedAccount[] = [
+const seedAccounts: Omit<TrackedAccount, 'adapter' | 'syncState'>[] = [
   {
     id: 'openai-api-main',
     provider: 'openai',
@@ -59,3 +60,9 @@ export const accounts: TrackedAccount[] = [
     updatedAt: '2026-03-30T18:00:00Z',
   },
 ]
+
+export const accounts: TrackedAccount[] = seedAccounts.map((account) => ({
+  ...account,
+  syncState: 'idle',
+  adapter: getDefaultAdapter(account),
+}))

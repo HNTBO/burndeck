@@ -1,0 +1,284 @@
+/* ==========================================================================
+   BurnDeck — Retained Theme
+   V1: Todoist / Notion minimalism
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+body.theme-v1 {
+  background: #fafafa;
+  color: #1a1a1a;
+  font-family: 'Outfit', sans-serif;
+}
+
+body.theme-v1::before {
+  display: none;
+}
+
+.v1-dash {
+  --panel: #ffffff;
+  --panel-strong: #f5f5f5;
+  --line: #e5e5e5;
+  --text: #1a1a1a;
+  --muted: #888888;
+  --accent: #e8453c;
+  --accent-soft: rgba(232, 69, 60, 0.08);
+  --ok: #1a7f37;
+  --warn: #9a6700;
+  --idle: #6e7781;
+}
+
+.v1-dash .hero,
+.v1-dash .card,
+.v1-dash .section-header {
+  backdrop-filter: none;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+}
+
+.v1-dash .hero {
+  border-radius: 18px;
+}
+
+.v1-dash .hero h1,
+.v1-dash .section-header h2,
+.v1-dash .card h3,
+.v1-dash .modal__header h2 {
+  color: #1a1a1a;
+}
+
+.v1-dash .eyebrow {
+  color: #e8453c;
+}
+
+.v1-dash .lead,
+.v1-dash .hero__stat span {
+  color: #888;
+}
+
+.v1-dash .hero__stat {
+  background: #f7f7f7;
+  border-color: #e5e5e5;
+  min-width: 420px;
+  padding: 22px 24px 24px;
+  border-radius: 24px;
+}
+
+.v1-dash .hero__stat strong {
+  color: #1a1a1a;
+}
+
+.v1-dash .hero__refresh {
+  border-radius: 18px;
+}
+
+.v1-dash .hero__stat-actions .button--ghost {
+  min-height: 56px;
+  border-radius: 18px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.v1-dash .hero__stat-note--neutral {
+  color: #8f8f8f;
+}
+
+.v1-dash .hero__stat-note--success {
+  color: #1a7f37;
+}
+
+.v1-dash .hero__stat-note--error {
+  color: #cf222e;
+}
+
+.v1-dash .badge--healthy {
+  color: #1a7f37;
+  background: rgba(26, 127, 55, 0.07);
+  border-color: rgba(26, 127, 55, 0.15);
+}
+
+.v1-dash .badge--watch {
+  color: #9a6700;
+  background: rgba(154, 103, 0, 0.07);
+  border-color: rgba(154, 103, 0, 0.15);
+}
+
+.v1-dash .badge--warning {
+  color: #bc4c00;
+  background: rgba(188, 76, 0, 0.07);
+  border-color: rgba(188, 76, 0, 0.15);
+}
+
+.v1-dash .badge--exhausted {
+  color: #cf222e;
+  background: rgba(207, 34, 46, 0.07);
+  border-color: rgba(207, 34, 46, 0.15);
+}
+
+.v1-dash .badge--unknown,
+.v1-dash .badge--idle {
+  color: #6e7781;
+  background: rgba(110, 119, 129, 0.07);
+  border-color: rgba(110, 119, 129, 0.15);
+}
+
+.v1-dash .badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  line-height: 1;
+}
+
+.v1-dash .button {
+  background: #1a1a1a;
+  color: #fafafa;
+  border-radius: 10px;
+}
+
+.v1-dash .button:hover {
+  filter: brightness(1.3);
+}
+
+.v1-dash .button--ghost {
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #e5e5e5;
+}
+
+.v1-dash .button--ghost:hover {
+  background: #f5f5f5;
+  filter: none;
+}
+
+.v1-dash .button--icon {
+  min-width: 58px;
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+.v1-dash .button__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.v1-dash .button--danger {
+  color: #cf222e;
+  background: #fff5f5;
+  border-color: #f0d4d4;
+}
+
+.v1-dash .field input,
+.v1-dash .field select,
+.v1-dash .field textarea {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  color: #1a1a1a;
+  border-radius: 10px;
+}
+
+.v1-dash .field input:focus,
+.v1-dash .field select:focus,
+.v1-dash .field textarea:focus {
+  outline: 2px solid rgba(232, 69, 60, 0.25);
+  border-color: rgba(232, 69, 60, 0.4);
+}
+
+.v1-dash .field span,
+.v1-dash .account-card__provider,
+.v1-dash .account-card__label,
+.v1-dash .modal__eyebrow {
+  color: #9b9b9b;
+}
+
+.v1-dash .notice--neutral {
+  color: #888;
+  background: #f7f7f7;
+  border-color: #e5e5e5;
+}
+
+.v1-dash .notice--success {
+  color: #1a7f37;
+  background: rgba(26, 127, 55, 0.05);
+  border-color: rgba(26, 127, 55, 0.15);
+}
+
+.v1-dash .notice--error {
+  color: #cf222e;
+  background: rgba(207, 34, 46, 0.05);
+  border-color: rgba(207, 34, 46, 0.15);
+}
+
+.v1-dash .section-title {
+  color: #1a1a1a;
+}
+
+.v1-dash .account-card__tracking {
+  border-top-color: #ececec;
+}
+
+.v1-dash .account-card__tracking p:last-child {
+  color: #4f4f4f;
+}
+
+.v1-dash .account-card__sync {
+  color: #888;
+}
+
+.v1-dash .account-card__refresh {
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
+.v1-dash .card--add {
+  background: #fff;
+  border: 1px dashed #dddddd;
+}
+
+.v1-dash .card--add:hover {
+  background: #fcfcfc;
+  border-color: #d0d0d0;
+}
+
+.v1-dash .card--add__plus {
+  color: #1a1a1a;
+  background: #f5f5f5;
+  border-color: #e5e5e5;
+}
+
+.v1-dash .card--add__copy {
+  color: #777;
+}
+
+.v1-dash .modal {
+  background: rgba(250, 250, 250, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.v1-dash .modal__panel {
+  background: #fff;
+  border-color: #e5e5e5;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+}
+
+.v1-dash .shell {
+  padding-bottom: 80px;
+}
+
+@media (max-width: 820px) {
+  .v1-dash .hero__stat {
+    min-width: 100%;
+    border-radius: 20px;
+  }
+
+  .v1-dash .hero__stat-actions .button--ghost {
+    min-height: 52px;
+  }
+}
