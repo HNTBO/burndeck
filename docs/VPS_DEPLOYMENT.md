@@ -1,12 +1,34 @@
 # BurnDeck Deploy Guide
 
-This guide is for the chosen production shape:
+This guide now reflects the verified BurnDeck VPS setup as of 2026-04-10.
+
+## Verified Live Shape
+
+- private personal app
+- self-hosted on the VPS
+- Docker deployment in `/var/www/burndeck`
+- BurnDeck container listening on `6409`
+- Nginx reverse proxy in front of the container
+- Nginx basic auth in front of the app
+- HTTPS enforced at the Nginx layer
+- OpenAI admin key stored only on the server
+
+The earlier version of this doc assumed wildcard TLS was already handling everything at the VPS level. That was misleading.
+
+What was actually verified:
+
+- `burndeck.fmotion.fr` resolves to the VPS IP
+- BurnDeck is healthy internally at `http://127.0.0.1:6409/api/health`
+- Nginx must have an explicit BurnDeck site config and an enabled symlink in `/etc/nginx/sites-enabled`
+- requests fall through to the VPS default `444` server if the BurnDeck site is missing or not enabled
+- the live HTTPS setup should follow the same per-subdomain certificate pattern used by other services on this VPS unless wildcard coverage has been separately verified
+
+## Intended Production Characteristics
 
 - private personal app
 - self-hosted on the VPS
 - Docker deployment
 - Nginx reverse proxy
-- wildcard TLS already handled on the server
 - Nginx basic auth in front of the app
 - OpenAI admin key stored only on the server
 
@@ -29,9 +51,15 @@ Make sure the VPS already has:
 
 - Docker and Docker Compose available
 - Nginx installed and running
-- wildcard TLS working for `*.fmotion.fr`
 - `/etc/nginx/.htpasswd` available for basic auth
 - a target app path such as `/var/www/burndeck`
+
+Also make sure:
+
+- `burndeck.fmotion.fr` resolves to the VPS IP
+- an Nginx site file exists for BurnDeck
+- that site file is enabled in `/etc/nginx/sites-enabled`
+- TLS material exists for the chosen public hostname
 
 ## Environment
 
@@ -50,7 +78,9 @@ Notes:
 
 - `OPENAI_ADMIN_KEY` is required for the OpenAI refresh route.
 - `OPENAI_ORGANIZATION_ID` is optional.
-- `OPENAI_PROJECT_ID` is optional but useful if BurnDeck should track one OpenAI project instead of the whole org.
+- Leave `OPENAI_PROJECT_ID` empty if you want BurnDeck to read totals for the whole OpenAI organization by default.
+- `OPENAI_PROJECT_ID` is now a server-wide fallback for OpenAI API accounts that do not have a project ID set in the BurnDeck UI.
+- A specific BurnDeck OpenAI API account can now carry its own OpenAI project ID and override the server fallback.
 - Leave `VITE_BURNDECK_API_BASE_URL` empty in production so the frontend uses same-origin requests through Nginx.
 - Set `CORS_ORIGIN` to the final production origin even if same-origin is expected.
 
@@ -92,7 +122,7 @@ If `openAIConfigured` is `false`, the container started but the OpenAI admin key
 
 ## Nginx
 
-Example site config for `burndeck.fmotion.fr`:
+Verified pattern for `burndeck.fmotion.fr`:
 
 ```nginx
 server {
@@ -102,11 +132,13 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
     server_name burndeck.fmotion.fr;
 
-    ssl_certificate /etc/letsencrypt/live/fmotion.fr/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/fmotion.fr/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/burndeck.fmotion.fr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/burndeck.fmotion.fr/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     auth_basic "Restricted";
     auth_basic_user_file /etc/nginx/.htpasswd;
@@ -124,9 +156,12 @@ server {
 Enable and reload:
 
 ```bash
+sudo ln -s /etc/nginx/sites-available/burndeck /etc/nginx/sites-enabled/burndeck
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+If the BurnDeck site is not enabled, requests for `burndeck.fmotion.fr` will fall through to the VPS default server and can show `curl: (52) Empty reply from server` because that default config returns `444`.
 
 ## Verification After Deploy
 
@@ -156,6 +191,19 @@ curl http://127.0.0.1:6409/api/health
 ## Current Scope And Limitations
 
 - OpenAI refresh currently targets OpenAI API accounts through the server route.
-- The server currently reads org-level cost and completions usage data over the last 30 days.
+- The server currently reads org-level cost and completions usage data over the last 30 days, unless the specific account or the server fallback provides an OpenAI project ID.
+- OpenAI API accounts can now be scoped per account with an optional project ID in the BurnDeck UI.
 - Anthropic and Google AI refreshes are not implemented yet.
 - Unsupported or manual-only subscriptions still rely on the manual path.
+
+## Current Verified VPS State
+
+As of 2026-04-10, the following was confirmed live:
+
+- Docker container built and started successfully on the VPS
+- BurnDeck server is listening on `0.0.0.0:6409`
+- `curl http://127.0.0.1:6409/api/health` returns `{"ok":true,"openAIConfigured":true}`
+- DNS for `burndeck.fmotion.fr` resolves to the VPS IP
+- Nginx now routes `burndeck.fmotion.fr` correctly
+- HTTP redirects to HTTPS
+- HTTPS returns `401 Authorization Required` before login, confirming basic auth is active

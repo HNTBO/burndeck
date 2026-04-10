@@ -110,15 +110,22 @@ const getOpenAIHeaders = () => {
   }
 }
 
-const buildQuery = (path: string, startTime: number) => {
+const resolveProjectId = (account: TrackedAccount) =>
+  typeof account.openAIProjectId === 'string' && account.openAIProjectId.trim()
+    ? account.openAIProjectId.trim()
+    : process.env.OPENAI_PROJECT_ID?.trim() || undefined
+
+const buildQuery = (path: string, startTime: number, account: TrackedAccount) => {
   const url = new URL(`${OPENAI_BASE_URL}${path}`)
 
   url.searchParams.set('start_time', String(startTime))
   url.searchParams.set('bucket_width', '1d')
   url.searchParams.set('limit', String(COST_RANGE_DAYS))
 
-  if (process.env.OPENAI_PROJECT_ID) {
-    url.searchParams.append('project_ids', process.env.OPENAI_PROJECT_ID)
+  const projectId = resolveProjectId(account)
+
+  if (projectId) {
+    url.searchParams.append('project_ids', projectId)
   }
 
   return url
@@ -172,8 +179,10 @@ export const handleOpenAIRefresh = async (
   const now = new Date()
   const startTime = Math.floor((now.getTime() - COST_RANGE_DAYS * 24 * 60 * 60 * 1000) / 1000)
   const [costs, usage] = await Promise.all([
-    fetchOpenAIJson<OpenAICostsResponse>(buildQuery('/organization/costs', startTime)),
-    fetchOpenAIJson<OpenAIUsageResponse>(buildQuery('/organization/usage/completions', startTime)),
+    fetchOpenAIJson<OpenAICostsResponse>(buildQuery('/organization/costs', startTime, account)),
+    fetchOpenAIJson<OpenAIUsageResponse>(
+      buildQuery('/organization/usage/completions', startTime, account),
+    ),
   ])
 
   const spendUsd = Number(sumCosts(costs).toFixed(2))

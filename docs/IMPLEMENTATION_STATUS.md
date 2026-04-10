@@ -1,6 +1,6 @@
 # BurnDeck Implementation Status
 
-Last updated: 2026-04-07
+Last updated: 2026-04-10
 
 ## Purpose
 
@@ -12,6 +12,7 @@ This file records the actual implementation state, the main decisions already lo
 
 - BurnDeck now runs only with the retained `/1` minimal to-do-list style.
 - Accounts can be created, edited, and deleted from the UI.
+- The account editor now exposes account type, refresh mode, optional plan/cap fields, and an optional per-account OpenAI project ID.
 - The add-account flow is card-based and opens a modal instead of using a permanent form section.
 - Account cards are simplified to the retained fields:
   - name
@@ -41,6 +42,7 @@ This file records the actual implementation state, the main decisions already lo
 - Per-account refresh is implemented.
 - Manual accounts use a manual check-in adapter.
 - OpenAI API accounts use a live adapter path that calls the backend.
+- Live OpenAI API refresh can now be scoped per tracked account with an optional project ID instead of one global project setting only.
 
 ### Backend and Deployment Scaffold
 
@@ -50,7 +52,9 @@ This file records the actual implementation state, the main decisions already lo
   - `POST /api/refresh/openai`
 - Docker packaging is in place.
 - A Docker Compose file is in place.
-- The project builds end-to-end with `npm run build`.
+- BurnDeck is now deployed on the VPS.
+- The container is running and serving health successfully on port `6409`.
+- Nginx now fronts the app with HTTPS and basic auth on `burndeck.fmotion.fr`.
 
 ## Decisions That Have Been Made
 
@@ -61,7 +65,8 @@ This file records the actual implementation state, the main decisions already lo
 - Deployment pattern is:
   - Dockerized app
   - Nginx reverse proxy
-  - wildcard TLS already handled at the VPS level
+  - explicit BurnDeck Nginx site enabled on the VPS
+  - HTTPS handled at the Nginx layer for the BurnDeck hostname
   - Nginx basic auth protecting the app
 - Provider secrets must stay server-side. Browser-side provider keys are not acceptable.
 - OpenAI is the first real provider integration to support.
@@ -72,7 +77,7 @@ This file records the actual implementation state, the main decisions already lo
 
 ### OpenAI Integration Completion
 
-- The backend route exists, but it still needs live validation against a real deployed OpenAI admin key.
+- The backend route is live and the server confirms a real deployed OpenAI admin key is present.
 - Error handling should be verified against real API failures, bad credentials, and empty usage windows.
 - The UI should be checked against real OpenAI refresh payloads after deployment.
 
@@ -84,25 +89,24 @@ This file records the actual implementation state, the main decisions already lo
 
 ### Operational Completion
 
-- BurnDeck still needs to be deployed on the VPS.
-- The final BurnDeck-specific VPS config note should be written into the `_dev-notes/vps` folder after the live setup is confirmed.
+- BurnDeck is deployed on the VPS.
+- The BurnDeck-specific VPS config note in `docs/VPS_DEPLOYMENT.md` has been updated with the verified live shape.
+- One authenticated end-to-end OpenAI refresh from the UI still needs confirmation.
 
 ## Next Items Until The Current End State
 
 ### Immediate Next Steps
 
-1. Deploy the current app to the VPS with Docker and Nginx basic auth.
-2. Add the real `OPENAI_ADMIN_KEY` on the server.
-3. Verify `GET /api/health` and one end-to-end OpenAI refresh from the UI.
-4. Fix any live-integration gaps found during that first real refresh run.
+1. Verify one authenticated end-to-end OpenAI refresh from the UI.
+2. Fix any live-integration gaps found during that first real refresh run.
+3. Record the final Nginx site path, cert path, and auth file path if you want an even more literal runbook.
 
 ### Completion Steps For The Current Scope
 
-5. Finalize the BurnDeck VPS config note with the exact live values and paths.
-6. Close the OpenAI integration item once real refresh is confirmed stable.
-7. Decide whether account ordering/grouping belongs in the current milestone or the next one.
+4. Close the OpenAI integration item once real refresh is confirmed stable.
+5. Decide whether account ordering/grouping belongs in the current milestone or the next one.
 
 ### After The Current Scope
 
-8. Add Anthropic and Google AI provider integrations if they are still worth automating.
-9. Improve unsupported/manual-only subscription handling once real provider coverage is clearer.
+6. Add Anthropic and Google AI provider integrations if they are still worth automating.
+7. Improve unsupported/manual-only subscription handling once real provider coverage is clearer.

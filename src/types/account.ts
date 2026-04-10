@@ -18,6 +18,7 @@ export type TrackedAccount = {
   label: string
   accessKind: AccessKind
   sourceType: SourceType
+  openAIProjectId?: string
   status: HealthStatus
   planName?: string
   notes?: string

@@ -1,6 +1,6 @@
 # BurnDeck Project Tracker
 
-Last updated: 2026-04-07
+Last updated: 2026-04-10
 
 ## Purpose
 
@@ -16,10 +16,12 @@ See also: `docs/IMPLEMENTATION_STATUS.md` for the implementation snapshot, locke
 - Dashboard data persists locally in browser `localStorage`.
 - JSON export/import works for account snapshots.
 - Existing accounts can be edited manually.
+- The account editor can now create real OpenAI API entries with live/manual refresh selection and optional per-account project scope.
 - Account records now carry sync metadata and adapter metadata.
 - A manual `Refresh all` flow exists with one reference adapter pattern.
 - A VPS-ready backend path now exists for real OpenAI org refreshes.
-- Build is working through `npm run build`.
+- BurnDeck is now deployed on the VPS behind Nginx and basic auth.
+- Internal health on the VPS is confirmed working with a real `OPENAI_ADMIN_KEY`.
 
 ## Product Direction
 
@@ -68,7 +70,7 @@ See also: `docs/IMPLEMENTATION_STATUS.md` for the implementation snapshot, locke
 ## Near-Term Decisions
 
 - The retained UI is the `/1` minimal theme only.
-- The deployment target is the VPS with Docker, Nginx, wildcard TLS, and Nginx basic auth.
+- The deployment target is the VPS with Docker, Nginx, HTTPS at the hostname level, and Nginx basic auth.
 - Automatic refresh starts with one manual `Refresh all` button rather than background polling.
 - OpenAI is the first real provider integration to finish.
 

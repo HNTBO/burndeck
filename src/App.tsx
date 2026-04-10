@@ -87,17 +87,31 @@ const createNewAccount = (draft: AccountDraft, accounts: TrackedAccount[]): Trac
   const fallbackLabel = `New account ${accounts.length + 1}`
   const label = draft.label.trim() || fallbackLabel
   const notes = draft.notes.trim()
+  const planName = draft.planName.trim()
+  const openAIProjectId = draft.openAIProjectId.trim()
+  const spendCapUsd =
+    draft.spendCapUsd.trim() === '' ? undefined : Number(draft.spendCapUsd.trim())
 
   return {
     id: createAccountId(label, accounts),
     provider: draft.provider,
     label,
-    accessKind: 'subscription',
-    sourceType: 'manual',
+    accessKind: draft.accessKind,
+    sourceType: draft.sourceType,
+    openAIProjectId:
+      draft.provider === 'openai' && draft.accessKind === 'api' ? openAIProjectId || undefined : undefined,
     status: draft.status,
     syncState: 'idle',
-    adapter: getDefaultAdapter({ accessKind: 'subscription', provider: draft.provider }),
+    adapter: getDefaultAdapter({
+      accessKind: draft.accessKind,
+      provider: draft.provider,
+      sourceType: draft.sourceType,
+      openAIProjectId:
+        draft.provider === 'openai' && draft.accessKind === 'api' ? openAIProjectId || undefined : undefined,
+    }),
+    planName: planName || undefined,
     notes: notes || undefined,
+    spendCapUsd: Number.isFinite(spendCapUsd) ? spendCapUsd : undefined,
     updatedAt: new Date().toISOString(),
   }
 }
@@ -108,6 +122,10 @@ const getTrackingInfo = (account: TrackedAccount) => {
   }
 
   const fallback = [`${account.sourceType} tracking`, account.accessKind]
+
+  if (account.provider === 'openai' && account.accessKind === 'api') {
+    fallback.push(account.openAIProjectId ? `project ${account.openAIProjectId}` : 'org scope')
+  }
 
   if (account.planName?.trim()) {
     fallback.push(account.planName.trim())

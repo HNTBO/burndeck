@@ -116,12 +116,16 @@ const deriveOpenAIHealth = (
 }
 
 export const getDefaultAdapter = (
-  account: Pick<TrackedAccount, 'accessKind' | 'provider'>,
+  account: Pick<TrackedAccount, 'accessKind' | 'provider' | 'sourceType' | 'openAIProjectId'>,
 ): AccountAdapterMetadata => {
-  if (account.provider === 'openai' && account.accessKind === 'api') {
+  if (
+    account.provider === 'openai' &&
+    account.accessKind === 'api' &&
+    account.sourceType === 'api'
+  ) {
     return {
       id: 'openai-org-api',
-      label: 'OpenAI org API',
+      label: account.openAIProjectId ? 'OpenAI project API' : 'OpenAI org API',
       mode: 'live',
     }
   }
@@ -160,6 +164,10 @@ export const normalizeTrackedAccount = (account: StoredTrackedAccount): TrackedA
   ...account,
   lastSyncedAt: typeof account.lastSyncedAt === 'string' ? account.lastSyncedAt : undefined,
   notes: typeof account.notes === 'string' && account.notes.trim() ? account.notes : undefined,
+  openAIProjectId:
+    typeof account.openAIProjectId === 'string' && account.openAIProjectId.trim()
+      ? account.openAIProjectId.trim()
+      : undefined,
   planName:
     typeof account.planName === 'string' && account.planName.trim()
       ? account.planName
@@ -194,6 +202,7 @@ export const isStoredTrackedAccount = (value: unknown): value is StoredTrackedAc
     providerIds.has(value.provider as ProviderId) &&
     accessKinds.has(value.accessKind as AccessKind) &&
     sourceTypes.has(value.sourceType as SourceType) &&
+    (value.openAIProjectId == null || typeof value.openAIProjectId === 'string') &&
     healthStatuses.has(value.status as HealthStatus) &&
     (value.planName == null || typeof value.planName === 'string') &&
     (value.notes == null || typeof value.notes === 'string') &&
@@ -246,7 +255,10 @@ const openAIOrgApiAdapter: AccountRefreshAdapter = {
   id: 'openai-org-api',
   label: 'OpenAI org API',
   mode: 'live',
-  supports: (account) => account.provider === 'openai' && account.accessKind === 'api',
+  supports: (account) =>
+    account.provider === 'openai' &&
+    account.accessKind === 'api' &&
+    account.sourceType === 'api',
   refresh: async (account) => {
     try {
       const response = await fetch(buildApiUrl('/api/refresh/openai'), {
@@ -337,11 +349,10 @@ const refreshSingleAccount = async (
   return {
     ...account,
     ...result.changes,
-    adapter: {
-      id: adapter.id,
-      label: adapter.label,
-      mode: adapter.mode,
-    },
+    adapter: getDefaultAdapter({
+      ...account,
+      ...result.changes,
+    }),
     lastSyncedAt: context.now,
     status: nextStatus,
     syncError: undefined,

@@ -194,6 +194,10 @@ body.theme-v1::before {
   color: #9b9b9b;
 }
 
+.v1-dash .field__hint {
+  color: #8d8d8d;
+}
+
 .v1-dash .notice--neutral {
   color: #888;
   background: #f7f7f7;

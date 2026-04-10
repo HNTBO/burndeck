@@ -7,7 +7,7 @@ const seedAccounts: Omit<TrackedAccount, 'adapter' | 'syncState'>[] = [
     provider: 'openai',
     label: 'OpenAI API · Main',
     accessKind: 'api',
-    sourceType: 'manual',
+    sourceType: 'api',
     status: 'healthy',
     planName: 'Pay-as-you-go',
     spendUsd: 23,
